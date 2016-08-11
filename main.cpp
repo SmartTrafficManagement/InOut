@@ -2,25 +2,23 @@
 #include <iostream>
 #include <conio.h>
 
-//opencv headers
-#include <opencv2\core\core.hpp>
-#include <opencv2\highgui\highgui.hpp>
-#include <opencv2\imgproc\imgproc.hpp>
+
+
+//include the created headers
+#include "Vehicle.h"
 
 using namespace std;
-using namespace cv;
 
-const int FRAME_HEIGHT = 360;
-const int FRAME_WIDTH = 640;
+
+
 int main()
 {
+	Vehicle vehicle;
+
 	VideoCapture carVideo;
 
 	//open the video file
 	carVideo.open("carVideo.mp4");
-
-	//Mat object to grab the frames from the video
-	Mat videoFrame;
 
 	//check if the video was loaded properly
 	if (!carVideo.isOpened()) {
@@ -28,6 +26,10 @@ int main()
 		cout << "Couldn't load the video!\nExiting the program now..\n";
 		return -1;
 	}
+
+	//get the first frame from the video stream,may also add some additional error check
+	//to check if the video has atleast one frame.
+	vehicle.getFirstframe(carVideo);
 
 	while (1) {
 	
@@ -40,11 +42,7 @@ int main()
 		//check if the video has ended and display a message to the user
 		if (carVideo.get(CV_CAP_PROP_POS_FRAMES) < carVideo.get(CV_CAP_PROP_FRAME_COUNT)) {
 		
-			//grab the frams into the Mat object
-			carVideo >> videoFrame;
-
-			//resize to 640x360;
-			resize(videoFrame, videoFrame, Size(FRAME_WIDTH, FRAME_HEIGHT), 0, 0, INTER_CUBIC);
+				vehicle.trackVehicles();
 			
 		}
 		else {
@@ -54,11 +52,8 @@ int main()
 			break;
 		}
 
-		//wait for some time
+		//wait for some time between grabbing two successive frames
 		waitKey(20);
-
-		//display the frames
-		imshow("Video", videoFrame);
 	}
 	
 	return 0;
