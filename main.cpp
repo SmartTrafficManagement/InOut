@@ -7,9 +7,6 @@
 //include the created headers
 #include "Vehicle.h"
 
-using namespace std;
-
-
 
 int main()
 {
