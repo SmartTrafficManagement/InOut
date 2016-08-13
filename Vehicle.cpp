@@ -70,24 +70,16 @@ void Vehicle::trackVehicles()
 		convexHull(_contours[j], _convexHulls[j]);
 	}
 
+	convexImg=Mat(_firstFrame.size(), CV_8UC3, Scalar(0, 0, 0));
+
 	//extract the cars out of the video
 	_extractCars(_convexHulls);
-
-	/*for (int i = 0; i < contours.size(); i++) {
-
-		Moments moment = moments(contours[i]);
-		if (moment.m00 > 5000) {
-			drawContours(contoursImg, contours, i, Scalar(255, 255, 255), -1);
-		}
-	}*/
-
-
 
 	imshow("Contours", contoursImg);
 
 	imshow("thresh", threshedImg);
 
-	_firstFrame = videoFrame2;
+	_firstFrame = videoFrame2.clone();
 
 }
 
@@ -108,28 +100,46 @@ void Vehicle::getFirstframe(VideoCapture &video)
 	_firstFrame = firstFrame;
 }
 
-void Vehicle::_extractCars(vector < vector<Point> > convexHulls)
+void Vehicle::_extractCars(vector < vector<Point> > &convexHulls)
 {
 
-	Mat convexImg(_firstFrame.size(), CV_8UC3, Scalar(0, 0, 0));
+	
 
 	for (int i = 0; i < _contours.size(); i++) {
 	
 		_blob.getBlobSpecs(convexHulls[i]);
      
-		if (_blob.bound.area() >= 2000 && _blob.boundWidth>=150) {
+		if (_blob.bound.area() >= 1000 && _blob.boundWidth >= 150 &&
+			_blob.AspectRatio >= 0.2&&_blob.AspectRatio <= 1.2&&
+			_blob.boundHeight > 100&&_blob.boundHeight<=300 && _blob.DiagonalSize > 150.0) {
 		
-			_carBlobs.push_back(convexHulls[i]);
-			rectangle(_firstFrame, _blob.bound, Scalar(0, 0, 255), 2);
-			imshow("Video", _firstFrame);
+					_Blob.push_back(_blob);
+
+				
 		}
 		//_carBlobs.push_back(convexHulls[i]);
 	}
 
-	drawContours(convexImg, _carBlobs, -1, Scalar(255, 255, 255), -1);
+	//Mat convexImg(_firstFrame.size(), CV_8UC3, Scalar(0, 0, 0));
+
+	convexHulls.clear();
+
+	for (int i = 0; i < _Blob.size(); i++) {
+	
+		convexHulls.push_back(_Blob[i].contour);
+
+	}
 
 	
 
-	imshow("Bolbs", convexImg);
-	
+	drawContours(convexImg, convexHulls, -1, Scalar(255, 255, 255), -1);
+	imshow("Blobs", convexImg);
+
+	for (int i = 0; i < _Blob.size(); i++) {
+
+		rectangle(_firstFrame, _Blob[i].bound, Scalar(0, 255, 0), 1);
+
+	}
+	imshow("Video", _firstFrame);
+	_Blob.clear();
 }

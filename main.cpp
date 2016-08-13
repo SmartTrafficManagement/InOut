@@ -15,7 +15,7 @@ int main()
 	VideoCapture carVideo;
 
 	//open the video file
-	carVideo.open("carVideo.mp4");
+	carVideo.open("carVideo7.mp4");
 
 	//check if the video was loaded properly
 	if (!carVideo.isOpened()) {

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <iostream>
 
 #include "Blob.h"
 
@@ -25,8 +26,8 @@ private:
 	Mat _firstFrame;
 	vector <vector<Point>> _contours;
 	vector <vector<Point>> _carBlobs;
-	
+	Mat convexImg;
 
-	void _extractCars(vector < vector<Point> > convexHulls);
+	void _extractCars(vector < vector<Point> > &convexHulls);
 };
 

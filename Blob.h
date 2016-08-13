@@ -14,6 +14,10 @@ public:
 	Blob();
 	Rect bound;
 	double boundWidth;
+	double boundHeight;
+	vector <Point> contour;
+	double AspectRatio;
+	double DiagonalSize;
 	void getBlobSpecs(vector <Point> hull);
 private:
 	
