@@ -2,13 +2,7 @@
 
 #include <string>
 
-//opencv headers
-#include <opencv2\core\core.hpp>
-#include <opencv2\highgui\highgui.hpp>
-#include <opencv2\imgproc\imgproc.hpp>
-
-using namespace cv;
-using namespace std;
+#include "Blob.h"
 
 class Vehicle
 {
@@ -20,10 +14,19 @@ public:
 	void getFirstframe(VideoCapture &video);
 
 private:
-	
+
+	Blob _blob;
+	vector <Blob> _Blob;
+
 	char _FPS[3];
 
 	VideoCapture _video;
+	
 	Mat _firstFrame;
+	vector <vector<Point>> _contours;
+	vector <vector<Point>> _carBlobs;
+	
+
+	void _extractCars(vector < vector<Point> > convexHulls);
 };
 

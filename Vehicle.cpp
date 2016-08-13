@@ -55,19 +55,33 @@ void Vehicle::trackVehicles()
 	threshedImgCopy = threshedImg.clone();
 
 	//find the contours
-	vector <vector<Point>> contours;
 
-	findContours(threshedImgCopy, contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+	findContours(threshedImgCopy, _contours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
 	
 	Mat contoursImg(threshedImgCopy.size(), CV_8UC3, Scalar(0,0,0));
 
-	for (int i = 0; i < contours.size(); i++) {
+	drawContours(contoursImg, _contours, -1, Scalar(255, 255, 255), -1);
+
+	vector < vector<Point> > _convexHulls(_contours.size());
+
+	////extract the convex hulls out of the contours
+	for (int j=0; j < _contours.size(); j++) {
+
+		convexHull(_contours[j], _convexHulls[j]);
+	}
+
+	//extract the cars out of the video
+	_extractCars(_convexHulls);
+
+	/*for (int i = 0; i < contours.size(); i++) {
 
 		Moments moment = moments(contours[i]);
 		if (moment.m00 > 5000) {
 			drawContours(contoursImg, contours, i, Scalar(255, 255, 255), -1);
 		}
-	}
+	}*/
+
+
 
 	imshow("Contours", contoursImg);
 
@@ -92,4 +106,30 @@ void Vehicle::getFirstframe(VideoCapture &video)
 	resize(firstFrame, firstFrame, Size(FRAME_WIDTH, FRAME_HEIGHT), 0, 0, INTER_CUBIC);
 
 	_firstFrame = firstFrame;
+}
+
+void Vehicle::_extractCars(vector < vector<Point> > convexHulls)
+{
+
+	Mat convexImg(_firstFrame.size(), CV_8UC3, Scalar(0, 0, 0));
+
+	for (int i = 0; i < _contours.size(); i++) {
+	
+		_blob.getBlobSpecs(convexHulls[i]);
+     
+		if (_blob.bound.area() >= 2000 && _blob.boundWidth>=150) {
+		
+			_carBlobs.push_back(convexHulls[i]);
+			rectangle(_firstFrame, _blob.bound, Scalar(0, 0, 255), 2);
+			imshow("Video", _firstFrame);
+		}
+		//_carBlobs.push_back(convexHulls[i]);
+	}
+
+	drawContours(convexImg, _carBlobs, -1, Scalar(255, 255, 255), -1);
+
+	
+
+	imshow("Bolbs", convexImg);
+	
 }
