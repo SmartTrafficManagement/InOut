@@ -13,11 +13,14 @@ public:
 
 	void trackVehicles();
 	void getFirstframe(VideoCapture &video);
+	void addBlobToExistingBlobs(Blob &current_blob,vector<Blob> &existing_blob,int minDistIndex);
+	void addNewBlob(Blob &current_blob,vector <Blob> &existing_blob);
 
 private:
 
-	Blob _blob;
-	vector <Blob> _Blob;
+	vector <Blob> _existingBlob;
+
+	bool isFirstFrame = true;
 
 	char _FPS[3];
 
@@ -29,5 +32,7 @@ private:
 	Mat convexImg;
 
 	void _extractCars(vector < vector<Point> > &convexHulls);
+	void _matchExistingFrameBlobwWithCurrentFrameBlob(vector <Blob> &existingBlob, vector <Blob> &currentBlob);
+	double distanceBetweenPoints(Point point1, Point point2);
 };
 

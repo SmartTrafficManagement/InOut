@@ -42,7 +42,7 @@ void Vehicle::trackVehicles()
 	//putText(_firstFrame, _FPS, Point(600, 100), CV_FONT_HERSHEY_SIMPLEX, 1, Scalar(0, 0, 255), 8);
 	
 	//display the frames
-	imshow("Video", _firstFrame);
+	//imshow("Video", _firstFrame);
 
 	threshold(diffFrame, threshedImg, 30, 255.0, CV_THRESH_BINARY);
 
@@ -103,25 +103,25 @@ void Vehicle::getFirstframe(VideoCapture &video)
 void Vehicle::_extractCars(vector < vector<Point> > &convexHulls)
 {
 
-	
+	Blob _blob;
+	vector <Blob> _Blob;
 
+	//get the blob and calculate its specifications like height,width etc.
 	for (int i = 0; i < _contours.size(); i++) {
 	
 		_blob.getBlobSpecs(convexHulls[i]);
-     
-		if (_blob.bound.area() >= 1000 && _blob.boundWidth >= 150 &&
-			_blob.AspectRatio >= 0.2&&_blob.AspectRatio <= 1.2&&
-			_blob.boundHeight > 100&&_blob.boundHeight<=300 && _blob.DiagonalSize > 150.0) {
+		//store the blobs that qualify minimum requiremnet.
+		if (_blob.bound.area() >= 600 && _blob.boundWidth >= 100 && _blob.boundWidth<250 &&
+			_blob.AspectRatio >= 0.7&&_blob.AspectRatio <= 1.2&&
+			_blob.boundHeight > 50&&_blob.boundHeight<=350 && _blob.DiagonalSize > 100.0) {
 		
 					_Blob.push_back(_blob);
-
-				
-		}
-		//_carBlobs.push_back(convexHulls[i]);
+			}
+	
 	}
 
-	//Mat convexImg(_firstFrame.size(), CV_8UC3, Scalar(0, 0, 0));
-
+	
+	//clear the convexhull vector to add new values
 	convexHulls.clear();
 
 	for (int i = 0; i < _Blob.size(); i++) {
@@ -130,16 +130,114 @@ void Vehicle::_extractCars(vector < vector<Point> > &convexHulls)
 
 	}
 
-	
-
 	drawContours(convexImg, convexHulls, -1, Scalar(255, 255, 255), -1);
+
 	imshow("Blobs", convexImg);
 
 	for (int i = 0; i < _Blob.size(); i++) {
 
-		rectangle(_firstFrame, _Blob[i].bound, Scalar(0, 255, 0), 1);
+		rectangle(_firstFrame, _Blob[i].bound, Scalar(0, 255, 0), 2);
 
 	}
+
 	imshow("Video", _firstFrame);
-	_Blob.clear();
+	
+	//try to match the next frame blobs with the current frame blobs
+	if (isFirstFrame == true) {
+
+		for (int i = 0; i < _Blob.size(); i++) {
+		
+			_existingBlob.push_back(_Blob[i]);
+		}
+	}
+	else {
+	
+		void _matchNextFrameBlobwWithCurrentFrameBlob();
+	}
+	//_Blob.clear();
+}
+
+void Vehicle::_matchExistingFrameBlobwWithCurrentFrameBlob(vector <Blob> &existingBlob, vector <Blob> &currentBlob)
+{
+	for (int i = 0; i < existingBlob.size(); i++) {
+	
+		//add some boolean
+		existingBlob[i].blnCurrentMatchFoundOrNewBlob = false;
+
+		existingBlob[i].predictNextPosition();
+	}
+
+	for (int i = 0; i < currentBlob.size(); i++) {
+	
+		int indexOfMinDist = 0;
+		
+		int minDist = 10000.0;
+		
+		for (int i = 0; i < existingBlob.size(); i++) {
+		
+			if (existingBlob[i].existingStillBeingTracked == true) {
+			
+				double distance = distanceBetweenPoints(currentBlob[i].centerPositions.back(), existingBlob[i].predictedNextPosition);
+				
+				if (distance < minDist) {
+				
+					minDist = distance;
+					indexOfMinDist = i;
+				}
+			
+			}
+		}
+
+		if (minDist < currentBlob[i].DiagonalSize*1.15) {
+		
+			addBlobToExistingBlobs(currentBlob[i],existingBlob,indexOfMinDist);
+		}
+		else {
+		
+			addNewBlob(currentBlob[i], existingBlob);
+		}
+	}
+	
+	for (int i = 0; i < existingBlob.size(); i++) {
+	
+		if (existingBlob[i].blnCurrentMatchFoundOrNewBlob == false) {
+			existingBlob[i].intNumOfConsecutiveFramesWithoutAMatch++;
+		}
+
+		if (existingBlob[i].intNumOfConsecutiveFramesWithoutAMatch >= 5) {
+			existingBlob[i].existingStillBeingTracked = false;
+		}
+
+
+	}
+}
+
+double Vehicle::distanceBetweenPoints(Point point1, Point point2) {
+
+	int intX = abs(point1.x - point2.x);
+	int intY = abs(point1.y - point2.y);
+
+	return(sqrt(pow(intX, 2) + pow(intY, 2)));
+}
+
+void Vehicle::addBlobToExistingBlobs(Blob &current_blob, vector<Blob> &existing_blob, int minDistIndex)
+{
+	existing_blob[minDistIndex].contour = current_blob.contour;
+	existing_blob[minDistIndex].bound = current_blob.bound;
+
+	existing_blob[minDistIndex].centerPositions.push_back(current_blob.centerPositions.back());
+
+	existing_blob[minDistIndex].DiagonalSize = current_blob.DiagonalSize;
+	existing_blob[minDistIndex].AspectRatio = current_blob.AspectRatio;
+
+	existing_blob[minDistIndex].existingStillBeingTracked = true;
+	existing_blob[minDistIndex].blnCurrentMatchFoundOrNewBlob = true;
+
+}
+
+void Vehicle::addNewBlob(Blob &current_blob, vector <Blob> &existing_blob) 
+{
+	current_blob.blnCurrentMatchFoundOrNewBlob = true;
+
+	existing_blob.push_back(current_blob);
 }

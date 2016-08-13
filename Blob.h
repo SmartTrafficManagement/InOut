@@ -11,14 +11,30 @@ using namespace std;
 class Blob
 {
 public:
+	
 	Blob();
+	
+	int intNumOfConsecutiveFramesWithoutAMatch;
+
+	void getBlobSpecs(vector <Point> hull);
+	void predictNextPosition();
+
 	Rect bound;
+	
 	double boundWidth;
 	double boundHeight;
+	
 	vector <Point> contour;
+	
 	double AspectRatio;
 	double DiagonalSize;
-	void getBlobSpecs(vector <Point> hull);
+	
+	vector <Point> centerPositions;
+	Point predictedNextPosition;
+
+	bool existingStillBeingTracked;
+	bool blnCurrentMatchFoundOrNewBlob;
+
 private:
 	
 };
