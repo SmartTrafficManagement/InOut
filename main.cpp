@@ -26,7 +26,10 @@ int main()
 
 	//get the first frame from the video stream,may also add some additional error check
 	//to check if the video has atleast one frame.
-	vehicle.getFirstframe(carVideo);
+	vector <Blob> existingBlob;
+
+	vehicle.getFirstframe(carVideo, existingBlob);
+	
 
 	while (1) {
 	
@@ -37,7 +40,7 @@ int main()
 		carVideo.set(CV_CAP_PROP_FRAME_HEIGHT, 576);*/
 
 		//check if the video has ended and display a message to the user
-		if (carVideo.get(CV_CAP_PROP_POS_FRAMES) < carVideo.get(CV_CAP_PROP_FRAME_COUNT)) {
+		if ((carVideo.get(CV_CAP_PROP_POS_FRAMES)+1) < carVideo.get(CV_CAP_PROP_FRAME_COUNT)) {
 		
 				vehicle.trackVehicles();
 			

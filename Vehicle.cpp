@@ -10,6 +10,9 @@ Vehicle::Vehicle()
 
 void Vehicle::trackVehicles() 
 {
+	Blob _blob;
+	vector <Blob> _Blob;
+
 	//Mat object to store the diffrence of the frame
 	Mat diffFrame;
 	
@@ -73,21 +76,27 @@ void Vehicle::trackVehicles()
 	convexImg=Mat(_firstFrame.size(), CV_8UC3, Scalar(0, 0, 0));
 
 	//extract the cars out of the video
-	_extractCars(_convexHulls);
+	_extractCars(_convexHulls, _blob,_Blob);
 
 	imshow("Contours", contoursImg);
 
 	imshow("thresh", threshedImg);
 
+	//_Blob.clear();
+	//_existingBlob.clear();
 	_firstFrame = videoFrame2.clone();
+
+	isFirstFrame = false;
+
+	frameCount++;
 
 }
 
-void Vehicle::getFirstframe(VideoCapture &video)
+void Vehicle::getFirstframe(VideoCapture &video, vector <Blob> existingBlob)
 {
 	_video = video;
 
-	
+	_existingBlob = existingBlob;
 	//sprintf(_FPS, "%d", _video.get(CV_CAP_PROP_FPS));
 
 	Mat firstFrame;
@@ -98,13 +107,15 @@ void Vehicle::getFirstframe(VideoCapture &video)
 	resize(firstFrame, firstFrame, Size(FRAME_WIDTH, FRAME_HEIGHT), 0, 0, INTER_CUBIC);
 
 	_firstFrame = firstFrame;
+
+	isFirstFrame = true;
+
+	frameCount = 2;
 }
 
-void Vehicle::_extractCars(vector < vector<Point> > &convexHulls)
+void Vehicle::_extractCars(vector < vector<Point> > &convexHulls, Blob &_blob, vector <Blob> &_Blob)
 {
 
-	Blob _blob;
-	vector <Blob> _Blob;
 
 	//get the blob and calculate its specifications like height,width etc.
 	for (int i = 0; i < _contours.size(); i++) {
@@ -152,9 +163,14 @@ void Vehicle::_extractCars(vector < vector<Point> > &convexHulls)
 	}
 	else {
 	
-		void _matchNextFrameBlobwWithCurrentFrameBlob();
+		_matchExistingFrameBlobwWithCurrentFrameBlob(_existingBlob,_Blob);
 	}
-	//_Blob.clear();
+
+	drawBlobInfoOnImage(_existingBlob, _firstFrame);
+
+	
+	imshow("Video", _firstFrame);
+	
 }
 
 void Vehicle::_matchExistingFrameBlobwWithCurrentFrameBlob(vector <Blob> &existingBlob, vector <Blob> &currentBlob)
@@ -171,9 +187,9 @@ void Vehicle::_matchExistingFrameBlobwWithCurrentFrameBlob(vector <Blob> &existi
 	
 		int indexOfMinDist = 0;
 		
-		int minDist = 10000.0;
+		double minDist = 10000.0;
 		
-		for (int i = 0; i < existingBlob.size(); i++) {
+		for (unsigned int i = 0; i < existingBlob.size(); i++) {
 		
 			if (existingBlob[i].existingStillBeingTracked == true) {
 			
@@ -240,4 +256,21 @@ void Vehicle::addNewBlob(Blob &current_blob, vector <Blob> &existing_blob)
 	current_blob.blnCurrentMatchFoundOrNewBlob = true;
 
 	existing_blob.push_back(current_blob);
+}
+
+void Vehicle::drawBlobInfoOnImage(std::vector<Blob> &blobs, cv::Mat &imgFrame2Copy) {
+
+	for (unsigned int i = 0; i < blobs.size(); i++) {
+
+		if (blobs[i].existingStillBeingTracked == true) {
+			cv::rectangle(imgFrame2Copy, blobs[i].bound, Scalar(0,0,255), 2);
+
+			int intFontFace = CV_FONT_HERSHEY_SIMPLEX;
+			double dblFontScale = blobs[i].DiagonalSize / 60.0;
+			int intFontThickness = (int)std::round(dblFontScale * 1.0);
+
+			cv::putText(imgFrame2Copy, std::to_string(i), blobs[i].centerPositions.back(), intFontFace, dblFontScale, Scalar(0,255,0), intFontThickness);
+			
+		}
+	}
 }

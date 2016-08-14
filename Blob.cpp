@@ -6,6 +6,7 @@ Blob::Blob()
 {
 }
 
+
 void Blob::getBlobSpecs(vector <Point> hull)
 {
 	contour = hull;
